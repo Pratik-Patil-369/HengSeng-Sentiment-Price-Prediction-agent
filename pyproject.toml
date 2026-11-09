@@ -1,0 +1,37 @@
+[project]
+name = "hengseng-sentiment-agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Pratik-Patil-369", email = "patilpratik2025@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "apify-client>=3.4.0",
+    "exa-py>=2.28.0",
+    "jinja2>=3.1.6",
+    "lightgbm>=4.7.0",
+    "numpy>=2.5.4",
+    "pandas>=3.1.1",
+    "pyarrow>=26.0.1",
+    "pydantic>=2.14.3",
+    "python-dotenv>=1.2.4",
+    "requests>=2.34.2",
+    "scikit-learn>=1.9.1",
+    "yfinance>=1.8.0",
+]
+
+[project.scripts]
+hengseng-sentiment-agent = "hengseng_sentiment_agent:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+    "rich>=15.0.0",
+    "tabulate>=0.10.0",
+]
