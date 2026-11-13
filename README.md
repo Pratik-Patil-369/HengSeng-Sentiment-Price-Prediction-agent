@@ -136,7 +136,8 @@ This project uses modern Python packaging via **[`uv`](https://github.com/astral
 
 ### 1. Clone & Enter Directory
 ```bash
-cd /home/pratik/.gemini/antigravity/scratch/hengseng-sentiment-agent
+git clone https://github.com/Pratik-Patil-369/HengSeng-Sentiment-Price-Prediction-agent.git
+cd HengSeng-Sentiment-Price-Prediction-agent
 ```
 
 ### 2. Environment Setup
@@ -152,8 +153,10 @@ cp .env.example .env
 ```
 Fill in your credentials (if available):
 - `APIFY_API_KEY`: For live Apify actor scraping.
+- `APIFY_ACTOR_ID`: Apify actor ID (default: `apify/web-scraper`).
 - `EXA_API_KEY`: For live Exa.ai semantic news search.
-*(Note: If left empty, the pipeline automatically runs seamlessly using resilient native scrapers and localized feeds).*
+- `TAVILY_API_KEY`: For live Tavily news search.
+*(Note: If left empty, the pipeline runs seamlessly with built-in resilient native scrapers and localized community feeds).*
 
 ---
 
