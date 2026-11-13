@@ -70,11 +70,10 @@ def build_parser() -> argparse.ArgumentParser:
         "--no-cache", action="store_true", help="Bypass local cache"
     )
 
-    # Command: report
-    report_parser = subparsers.add_parser("report", help="Regenerate visual HTML report from cached pipeline data")
-    report_parser.add_argument(
-        "--output-dir", type=str, default=str(DEFAULT_SETTINGS.reports_dir), help="Output directory"
-    )
+    # Command: serve
+    serve_parser = subparsers.add_parser("serve", help="Launch live FastAPI backend server and frontend web app")
+    serve_parser.add_argument("--host", type=str, default="127.0.0.1", help="Host interface (default: 127.0.0.1)")
+    serve_parser.add_argument("--port", type=int, default=8000, help="Port to listen on (default: 8000)")
 
     return parser
 
@@ -106,6 +105,14 @@ def main() -> None:
     elif args.command == "report":
         pipeline = SentimentPredictionPipeline(reports_dir=Path(args.output_dir))
         pipeline.run_pipeline(exchange="ALL", use_cache=True, generate_html=True)
+
+    elif args.command == "serve":
+        import uvicorn
+        print(f"\n🚀 Starting Live Server at http://{args.host}:{args.port}")
+        print(f"   • Frontend Dashboard: http://{args.host}:{args.port}/")
+        print(f"   • Backend Swagger Docs: http://{args.host}:{args.port}/docs")
+        print(f"   • Backend API: http://{args.host}:{args.port}/api/tickers\n")
+        uvicorn.run("hengseng_sentiment_agent.server:app", host=args.host, port=args.port, reload=False)
 
 
 if __name__ == "__main__":
