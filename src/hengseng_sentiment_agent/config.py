@@ -173,12 +173,18 @@ class PipelineSettings:
     n_splits_cv: int = 5
     random_state: int = 42
     
-    # API Keys
+    # API Keys & Scraper Config
     apify_api_key: Optional[str] = field(
         default_factory=lambda: os.getenv("APIFY_API_KEY")
     )
+    apify_actor_id: str = field(
+        default_factory=lambda: os.getenv("APIFY_ACTOR_ID", "apify/web-scraper")
+    )
     exa_api_key: Optional[str] = field(
         default_factory=lambda: os.getenv("EXA_API_KEY") or os.getenv("EXA_SEARCH_API_KEY")
+    )
+    tavily_api_key: Optional[str] = field(
+        default_factory=lambda: os.getenv("TAVILY_API_KEY")
     )
     
     # Paths

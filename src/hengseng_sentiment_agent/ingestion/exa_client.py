@@ -26,17 +26,27 @@ except ImportError:
     Exa = None
     EXA_AVAILABLE = False
 
+try:
+    from tavily import TavilyClient
+    TAVILY_AVAILABLE = True
+except ImportError:
+    TavilyClient = None
+    TAVILY_AVAILABLE = False
+
 
 class ExaNewsIngestor:
-    """Ingests recent, highly relevant financial news articles via Exa.ai API with realistic fallback."""
+    """Ingests recent, highly relevant financial news articles via Exa.ai or Tavily API with realistic fallback."""
 
     def __init__(
         self,
         api_key: Optional[str] = None,
+        tavily_key: Optional[str] = None,
         cache_dir: Optional[Path] = None,
     ):
         self.api_key = api_key or DEFAULT_SETTINGS.exa_api_key
+        self.tavily_key = tavily_key or DEFAULT_SETTINGS.tavily_api_key
         self.client = Exa(api_key=self.api_key) if (self.api_key and EXA_AVAILABLE) else None
+        self.tavily_client = TavilyClient(api_key=self.tavily_key) if (self.tavily_key and TAVILY_AVAILABLE) else None
         self.cache_dir = cache_dir or (DEFAULT_SETTINGS.data_dir / "news_articles")
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -67,7 +77,14 @@ class ExaNewsIngestor:
             try:
                 articles = self._fetch_from_exa_api(asset, lookback_days)
             except Exception as e:
-                logger.warning(f"Exa API query failed or rate-limited: {e}. Falling back to curated financial news feed.")
+                logger.warning(f"Exa API query failed or rate-limited: {e}. Falling back to Tavily/Curated feed.")
+
+        if not articles and self.tavily_client:
+            logger.info(f"Querying Tavily API for {asset.name} ({asset.ticker})...")
+            try:
+                articles = self._fetch_from_tavily_api(asset, lookback_days)
+            except Exception as e:
+                logger.warning(f"Tavily API call failed: {e}. Falling back to curated feed.")
 
         if not articles:
             articles = self._generate_fallback_news(asset, lookback_days)
@@ -126,6 +143,37 @@ class ExaNewsIngestor:
                 "published_utc": pub_date,
                 "snippet_text": res.text or "",
                 "domain": res.url.split("/")[2] if "/" in res.url else "exa.ai",
+            })
+        return articles
+
+    def _fetch_from_tavily_api(
+        self,
+        asset: AssetConfig,
+        lookback_days: int,
+    ) -> List[Dict[str, Any]]:
+        """Query Tavily news search API."""
+        if not self.tavily_client:
+            return []
+
+        query = f"{asset.name} {asset.ticker} stock price financial market earnings news"
+        res = self.tavily_client.search(
+            query=query,
+            topic="news",
+            days=lookback_days,
+            max_results=10,
+        )
+        articles = []
+        for item in res.get("results", []):
+            news_id = hashlib.md5(f"{item.get('url', '')}".encode()).hexdigest()[:12]
+            articles.append({
+                "news_id": news_id,
+                "ticker": asset.ticker,
+                "asset_name": asset.name,
+                "title": item.get("title", f"Market Report on {asset.name}"),
+                "url": item.get("url", ""),
+                "published_utc": item.get("published_date") or datetime.now(timezone.utc).isoformat(),
+                "snippet_text": item.get("content", ""),
+                "domain": item.get("url", "").split("/")[2] if "/" in item.get("url", "") else "tavily.com",
             })
         return articles
 

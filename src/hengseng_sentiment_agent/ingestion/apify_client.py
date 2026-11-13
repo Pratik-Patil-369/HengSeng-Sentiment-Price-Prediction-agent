@@ -43,9 +43,11 @@ class ApifySocialIngestor:
     def __init__(
         self,
         api_key: Optional[str] = None,
+        actor_id: Optional[str] = None,
         cache_dir: Optional[Path] = None,
     ):
         self.api_key = api_key or DEFAULT_SETTINGS.apify_api_key
+        self.actor_id = actor_id or DEFAULT_SETTINGS.apify_actor_id
         self.client = ApifyClient(self.api_key) if (self.api_key and APIFY_AVAILABLE) else None
         self.cache_dir = cache_dir or (DEFAULT_SETTINGS.data_dir / "social_posts")
         self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -133,9 +135,8 @@ class ApifySocialIngestor:
             "lookbackDays": lookback_days,
             "sources": sources,
         }
-        logger.info(f"Starting Apify actor for queries: {queries}")
-        # Note: Replace actor id if user has configured specific community forum actor
-        actor_call = self.client.actor("apify/web-scraper").call(run_input=actor_input, timeout_secs=60)
+        logger.info(f"Starting Apify actor {self.actor_id} for queries: {queries}")
+        actor_call = self.client.actor(self.actor_id).call(run_input=actor_input, timeout_secs=60)
         dataset_items = self.client.dataset(actor_call["defaultDatasetId"]).list_items().items
 
         posts = []
